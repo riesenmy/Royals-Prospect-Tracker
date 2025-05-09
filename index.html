@@ -35,7 +35,7 @@
 
     const table = document.getElementById('data-table');
     const headers = rows[0];
-    const formatCols = ['AVG', 'OBP', 'SLG'];
+    const formatCols = ['AVG', 'OBP', 'SLG', 'ERA', 'K/9', 'BB/9', 'HR/9', 'BABIP'];
     const formatIndexes = headers.map((header, i) => formatCols.includes(header.trim()) ? i : -1).filter(i => i !== -1);
 
     rows.forEach((row, rowIndex) => {
