@@ -21,6 +21,7 @@
     border-collapse: collapse;
     margin: 1em 0;
     width: 100%;
+    table-layout: auto; 
   }
   th, td {
     border: 1px solid #ccc;
@@ -33,12 +34,17 @@
   td {
     background-color: #7AB2DD;
     color: white;
+    text-align: center;
+    word-wrap: break-word;
+  }
+  td:first-child {
+    text-align: left;
   }
   tr:nth-child(even) td {
-  background-color: #6aa3cf;
-  color: white;
-}
-  </style>
+    background-color: #6aa3cf;
+    color: white;
+  }
+</style>
 </head>
 <body>
   <h1>Royals Prospects 2025 Stats</h1>
