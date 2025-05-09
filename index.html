@@ -51,6 +51,14 @@
       headers.forEach((header, index) => {
         const th = document.createElement('th');
         th.textContent = header;
+        
+        // Add sort arrow
+        if (th.dataset.sort === 'asc') {
+          th.innerHTML += ' ▲';
+        } else if (th.dataset.sort === 'desc') {
+          th.innerHTML += ' ▼';
+        }
+        
         th.addEventListener('click', () => {
           const isNumeric = formatIndexes.includes(index);
           const direction = th.dataset.sort === 'asc' ? 'desc' : 'asc';
@@ -71,6 +79,7 @@
 
           renderTable(sortedData);
         });
+
         headerRow.appendChild(th);
       });
       table.appendChild(headerRow);
@@ -92,8 +101,10 @@
         table.appendChild(tr);
       });
     }
+
     renderTable(dataRows);
   }
+
   loadCSV();
 </script>
 </body>
