@@ -30,7 +30,7 @@
   <table id="data-table"></table>
 
   <script>
-  async function loadCSV() {
+    async function loadCSV() {
     const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRUEUZo9Ih_lXcV-xwBqKo9kZDqhcDgfIVXS3UwsexNqSv5q1Oh7LIZRAduhT6dvhBMq6ezHAroO6A4/pub?gid=0&single=true&output=csv';
     const response = await fetch(url);
     const csvText = await response.text();
@@ -39,9 +39,10 @@
     const table = document.getElementById('data-table');
     const headers = rows[0];
     const formatCols = ['AVG', 'OBP', 'SLG', 'ERA', 'K/9', 'BB/9', 'HR/9', 'BABIP'];
-    const formatIndexes = headers.map((header, i) => formatCols.includes(header.trim()) ? i : -1).filter(i => i !== -1);
+        const formatIndexes = headers.map((header, i) => formatCols.includes(header.trim()) ? i : -1).filter(i => i !== -1);
 
     let dataRows = rows.slice(1); // Skip header
+    let currentSort = { index: null, direction: 'asc' };
 
     function renderTable(sortedData) {
       table.innerHTML = ''; // Clear table
@@ -50,20 +51,20 @@
       const headerRow = document.createElement('tr');
       headers.forEach((header, index) => {
         const th = document.createElement('th');
-        th.textContent = header;
-        
-        // Add sort arrow
-        if (th.dataset.sort === 'asc') {
-          th.innerHTML += ' ▲';
-        } else if (th.dataset.sort === 'desc') {
-          th.innerHTML += ' ▼';
-        }
-        
-        th.addEventListener('click', () => {
-          const isNumeric = formatIndexes.includes(index);
-          const direction = th.dataset.sort === 'asc' ? 'desc' : 'asc';
-          th.dataset.sort = direction;
+        const isSorted = currentSort.index === index;
+        const arrow = isSorted ? (currentSort.direction === 'asc' ? ' ▲' : ' ▼') : '';
+        th.innerHTML = header + arrow;
 
+        th.addEventListener('click', () => {
+          let direction = 'asc';
+
+          if (currentSort.index === index && currentSort.direction === 'asc') {
+            direction = 'desc';
+          }
+
+          currentSort = { index, direction };
+
+          const isNumeric = formatIndexes.includes(index);
           sortedData.sort((a, b) => {
             let valA = a[index], valB = b[index];
             if (isNumeric) {
