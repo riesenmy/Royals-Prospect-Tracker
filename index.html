@@ -11,6 +11,10 @@
     font-style: normal;
   }
   body {
+    <div class="header">
+    <img src="images/batter" alt="Logo" class="logo">
+    <h1>Your Page Title</h1>
+    </div>
     background-color: #004687;
     color: white;
     font-family: 'MyFont', sans-serif;
@@ -47,6 +51,16 @@
     background-color: #6aa3cf;
     color: white;
   }
+  .header {
+  display: flex;
+  align-items: center;
+  gap: 1em; /* spacing between image and text */
+  padding: 1em;
+  }
+
+.logo {
+  height: 60px; /* or whatever size fits best */
+}
 </style>
 </head>
 <body>
