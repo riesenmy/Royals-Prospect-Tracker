@@ -47,12 +47,35 @@
     background-color: #6aa3cf;
     color: white;
   }
-  .header {
+.header {
   display: flex;
   align-items: center;
   gap: 1em; /* spacing between image and text */
   padding: 1em;
   }
+.filter-container {
+  margin: 1em;
+  text-align: center;
+}
+.filter-btn {
+  background-color: #BD9B60;
+  color: white;
+  border: none;
+  padding: 0.5em 1em;
+  font-size: 1em;
+  font-family: 'MyFont', sans-serif;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 0 0.5em;
+}
+
+.filter-btn:hover {
+  background-color: #a8844f;
+}
+
+.filter-btn.active {
+  background-color: #7AB2DD;
+}
 
 .logo {
   height: 60px; /* or whatever size fits best */
@@ -78,6 +101,11 @@
     <div class="header">
     <img src="images/batter1.png" alt="Logo" class="logo">
     <h1>Royals Prospects 2025 Stats</h1>
+      <div class="filter-container">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="batters">Batters</button>
+        <button class="filter-btn" data-filter="pitchers">Pitchers</button>
+      </div>
     </div>
   <table id="data-table"></table>
 
@@ -111,7 +139,7 @@
   </script>
   
   <script>
-    async function loadCSV() {
+  async function loadCSV() {
     const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRUEUZo9Ih_lXcV-xwBqKo9kZDqhcDgfIVXS3UwsexNqSv5q1Oh7LIZRAduhT6dvhBMq6ezHAroO6A4/pub?gid=0&single=true&output=csv';
     const response = await fetch(url);
     const csvText = await response.text();
@@ -120,15 +148,26 @@
     const table = document.getElementById('data-table');
     const headers = rows[0];
     const formatCols = ['AVG', 'OBP', 'SLG', 'ERA', 'K/9', 'BB/9', 'HR/9', 'BABIP'];
-        const formatIndexes = headers.map((header, i) => formatCols.includes(header.trim()) ? i : -1).filter(i => i !== -1);
+    const formatIndexes = headers.map((header, i) => formatCols.includes(header.trim()) ? i : -1).filter(i => i !== -1);
 
     let dataRows = rows.slice(1); // Skip header
     let currentSort = { index: null, direction: 'asc' };
+    let currentFilter = 'all';
 
     function renderTable(sortedData) {
       table.innerHTML = ''; // Clear table
 
-      // Add header row
+      // Apply filter to the data
+    const filteredData = sortedData.filter(row => {
+      const position = row[1].trim();
+      const pitcherPositions = ['P', 'SP', 'RP'];
+    
+      if (currentFilter === 'batters') return !pitcherPositions.includes(position);
+      if (currentFilter === 'pitchers') return pitcherPositions.includes(position);
+      return true; // 'all'
+    });
+
+      // Header row
       const headerRow = document.createElement('tr');
       headers.forEach((header, index) => {
         const th = document.createElement('th');
@@ -146,7 +185,7 @@
           currentSort = { index, direction };
 
           const isNumeric = formatIndexes.includes(index);
-          sortedData.sort((a, b) => {
+          filteredData.sort((a, b) => {
             let valA = a[index], valB = b[index];
             if (isNumeric) {
               valA = parseFloat(valA);
@@ -159,15 +198,15 @@
               : (valA < valB ? 1 : valA > valB ? -1 : 0);
           });
 
-          renderTable(sortedData);
+          renderTable(filteredData);
         });
 
         headerRow.appendChild(th);
       });
       table.appendChild(headerRow);
 
-      // Add data rows
-      sortedData.forEach(row => {
+      // Data rows
+      filteredData.forEach(row => {
         const tr = document.createElement('tr');
         row.forEach((cell, colIndex) => {
           const td = document.createElement('td');
@@ -184,7 +223,17 @@
       });
     }
 
-    renderTable(dataRows);
+    // Set up filter button listeners
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.getAttribute('data-filter');
+        renderTable(dataRows);
+      });
+    });
+
+    renderTable(dataRows); // Initial render
   }
 
   loadCSV();
