@@ -66,6 +66,35 @@
     </div>
   <table id="data-table"></table>
 
+  <audio id="theme-audio" loop>
+  <source src="audio/RoyalsWillSoar.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+  </audio>
+
+  <button id="audio-toggle">Play Music</button>
+
+  <script>
+    const audio = document.getElementById('theme-audio');
+    const button = document.getElementById('audio-toggle');
+  
+    // Try to autoplay (some browsers will block it)
+    document.addEventListener('DOMContentLoaded', () => {
+      audio.play().catch(() => {
+        // Autoplay failed; wait for user to click
+      });
+    });
+  
+    button.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play();
+        button.textContent = 'Pause Music';
+      } else {
+        audio.pause();
+        button.textContent = 'Play Music';
+      }
+    });
+  </script>
+  
   <script>
     async function loadCSV() {
     const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRUEUZo9Ih_lXcV-xwBqKo9kZDqhcDgfIVXS3UwsexNqSv5q1Oh7LIZRAduhT6dvhBMq6ezHAroO6A4/pub?gid=0&single=true&output=csv';
