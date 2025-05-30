@@ -185,7 +185,8 @@
 
           currentSort = { index, direction };
 
-          const isNumeric = formatIndexes.includes(index);
+          const sampleVal = filteredData[0]?.[index] || '';
+          const isNumeric = !isNaN(parseFloat(sampleVal)) && isFinite(sampleVal);
           filteredData.sort((a, b) => {
             let valA = a[index], valB = b[index];
             if (isNumeric) {
