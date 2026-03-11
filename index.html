@@ -140,11 +140,83 @@
   </script>
   
   <script>
+  function parseCSV(csvText) {
+    const rows = [];
+    let row = [];
+    let cell = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < csvText.length; i++) {
+      const char = csvText[i];
+      const nextChar = csvText[i + 1];
+
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          cell += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        row.push(cell);
+        cell = '';
+      } else if ((char === '\n' || char === '\r') && !inQuotes) {
+        if (char === '\r' && nextChar === '\n') i++;
+        row.push(cell);
+        if (row.some(value => value.trim() !== '')) {
+          rows.push(row);
+        }
+        row = [];
+        cell = '';
+      } else {
+        cell += char;
+      }
+    }
+
+    if (cell.length > 0 || row.length > 0) {
+      row.push(cell);
+      if (row.some(value => value.trim() !== '')) {
+        rows.push(row);
+      }
+    }
+
+    return rows;
+  }
+
+  function showError(message) {
+    const table = document.getElementById('data-table');
+    table.innerHTML = '';
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    cell.textContent = message;
+    cell.style.textAlign = 'center';
+    cell.style.padding = '1em';
+    row.appendChild(cell);
+    table.appendChild(row);
+  }
+
   async function loadCSV() {
     const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRUEUZo9Ih_lXcV-xwBqKo9kZDqhcDgfIVXS3UwsexNqSv5q1Oh7LIZRAduhT6dvhBMq6ezHAroO6A4/pub?gid=0&single=true&output=csv';
-    const response = await fetch(url);
-    const csvText = await response.text();
-    const rows = csvText.trim().split('\n').map(row => row.split(','));
+
+    let rows;
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      const csvText = await response.text();
+      rows = parseCSV(csvText);
+    } catch (error) {
+      console.error('Could not load player data:', error);
+      showError('Unable to load player data right now. Please verify the Google Sheet is still published to the web and publicly accessible.');
+      return;
+    }
+
+    if (!rows || rows.length < 2) {
+      showError('No player rows were found in the published sheet.');
+      return;
+    }
 
     const table = document.getElementById('data-table');
     const headers = rows[0];
