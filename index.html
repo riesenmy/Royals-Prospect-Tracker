@@ -221,6 +221,18 @@
     const table = document.getElementById('data-table');
     const headers = rows[0];
     const normalizeHeader = (header) => header.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const isPitcherPosition = (positionValue) => {
+      const normalizedPosition = (positionValue || '').toUpperCase();
+      if (!normalizedPosition) return false;
+
+      const positionTokens = normalizedPosition
+        .split(/[^A-Z0-9]+/)
+        .map(token => token.trim())
+        .filter(Boolean);
+
+      const pitcherTokens = new Set(['P', 'SP', 'RP', 'RHP', 'LHP']);
+      return positionTokens.some(token => pitcherTokens.has(token));
+    };
     const decimalHeaderPatterns = [
       /^avg$/,
       /^obp$/,
@@ -247,6 +259,17 @@
       const normalized = normalizeHeader(header);
       return normalized === 'pos' || normalized === 'position';
     });
+    const hiddenColumnIndexes = new Set(
+      headers
+        .map((header, index) => ({ header, index }))
+        .filter(({ header }) => {
+          const normalized = normalizeHeader(header);
+          return normalized === 'sourceurl' || normalized === 'notes';
+        })
+        .map(({ index }) => index)
+    );
+    const bbColumnIndex = headers.findIndex((header) => normalizeHeader(header) === 'bb');
+    const kColumnIndex = headers.findIndex((header) => normalizeHeader(header) === 'k');
 
     let dataRows = rows.slice(1); // Skip header
     let currentSort = { index: null, direction: 'asc' };
@@ -256,20 +279,21 @@
       table.innerHTML = ''; // Clear table
 
       // Apply filter to the data
-    const filteredData = sortedData.filter(row => {
+      const filteredData = sortedData.filter(row => {
       if (positionColumnIndex === -1) return true;
 
-      const position = (row[positionColumnIndex] || '').trim().toUpperCase();
-      const pitcherPositions = ['P', 'SP', 'RP'];
+      const position = row[positionColumnIndex];
+      const pitcher = isPitcherPosition(position);
     
-      if (currentFilter === 'batters') return !pitcherPositions.includes(position);
-      if (currentFilter === 'pitchers') return pitcherPositions.includes(position);
+      if (currentFilter === 'batters') return !pitcher;
+      if (currentFilter === 'pitchers') return pitcher;
       return true; // 'all'
     });
 
       // Header row
       const headerRow = document.createElement('tr');
       headers.forEach((header, index) => {
+        if (hiddenColumnIndexes.has(index)) return;
         const th = document.createElement('th');
         const isSorted = currentSort.index === index;
         const arrow = isSorted ? (currentSort.direction === 'asc' ? ' ▲' : ' ▼') : '';
@@ -310,7 +334,16 @@
       filteredData.forEach(row => {
         const tr = document.createElement('tr');
         row.forEach((cell, colIndex) => {
+          if (hiddenColumnIndexes.has(colIndex)) return;
+
           const td = document.createElement('td');
+          const isPitcher = positionColumnIndex !== -1 && isPitcherPosition(row[positionColumnIndex]);
+          if (isPitcher && (colIndex === bbColumnIndex || colIndex === kColumnIndex)) {
+            td.textContent = '';
+            tr.appendChild(td);
+            return;
+          }
+
           if (formatIndexes.includes(colIndex)) {
             const num = parseFloat(cell);
             td.textContent = isNaN(num) ? cell : num.toFixed(3);
