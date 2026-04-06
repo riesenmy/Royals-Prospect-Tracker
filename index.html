@@ -264,7 +264,7 @@
         .map((header, index) => ({ header, index }))
         .filter(({ header }) => {
           const normalized = normalizeHeader(header);
-          return normalized === 'sourceurl' || normalized === 'notes';
+          return normalized === 'sourceurl' || normalized === 'notes' || normalized === 'wrc';
         })
         .map(({ index }) => index)
     );
