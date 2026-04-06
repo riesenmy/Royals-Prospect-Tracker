@@ -269,26 +269,7 @@
         .map(({ index }) => index)
     );
     const bbColumnIndex = headers.findIndex((header) => normalizeHeader(header) === 'bb');
-    const strikeoutColumnIndex = headers.findIndex((header) => {
-      const normalized = normalizeHeader(header);
-      return normalized === 'so' || normalized === 'k';
-    });
-    const inningsPitchedColumnIndex = headers.findIndex((header) => {
-      const normalized = normalizeHeader(header);
-      return normalized === 'ip' || normalized === 'inningspitched' || normalized === 'inn';
-    });
-
-    function parseInningsPitched(value) {
-      const raw = (value || '').toString().trim();
-      if (!raw) return NaN;
-
-      if (/^\d+\.[012]$/.test(raw)) {
-        const [wholeInnings, outs] = raw.split('.');
-        return parseInt(wholeInnings, 10) + (parseInt(outs, 10) / 3);
-      }
-
-      return parseFloat(raw);
-    }
+    const kColumnIndex = headers.findIndex((header) => normalizeHeader(header) === 'k');
 
     let dataRows = rows.slice(1); // Skip header
     let currentSort = { index: null, direction: 'asc' };
@@ -311,21 +292,12 @@
 
       // Header row
       const headerRow = document.createElement('tr');
-      const usePitchingRates = currentFilter === 'pitchers';
       headers.forEach((header, index) => {
         if (hiddenColumnIndexes.has(index)) return;
         const th = document.createElement('th');
         const isSorted = currentSort.index === index;
         const arrow = isSorted ? (currentSort.direction === 'asc' ? ' ▲' : ' ▼') : '';
-        const isPitcherStrikeoutColumn = usePitchingRates && index === strikeoutColumnIndex;
-        const isPitcherWalkColumn = usePitchingRates && index === bbColumnIndex;
-        const label = isPitcherStrikeoutColumn
-          ? 'SO/9'
-          : isPitcherWalkColumn
-            ? 'BB/9'
-            : header;
-
-        th.innerHTML = label + arrow;
+        th.innerHTML = header + arrow;
 
         th.addEventListener('click', () => {
           let direction = 'asc';
@@ -365,18 +337,9 @@
           if (hiddenColumnIndexes.has(colIndex)) return;
 
           const td = document.createElement('td');
-          const isPitcherRateColumn = colIndex === bbColumnIndex || colIndex === strikeoutColumnIndex;
-          if (usePitchingRates && isPitcherRateColumn) {
-            const inningsPitched = inningsPitchedColumnIndex === -1
-              ? NaN
-              : parseInningsPitched(row[inningsPitchedColumnIndex]);
-            const statValue = parseFloat(cell);
-            const perNine = inningsPitched > 0 && !isNaN(statValue)
-              ? (statValue * 9) / inningsPitched
-              : NaN;
-
-            td.textContent = isNaN(perNine) ? '' : perNine.toFixed(1);
-            td.style.textAlign = 'right';
+          const isPitcher = positionColumnIndex !== -1 && isPitcherPosition(row[positionColumnIndex]);
+          if (isPitcher && (colIndex === bbColumnIndex || colIndex === kColumnIndex)) {
+            td.textContent = '';
             tr.appendChild(td);
             return;
           }
