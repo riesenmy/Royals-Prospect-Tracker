@@ -219,16 +219,8 @@
     }
 
     const table = document.getElementById('data-table');
-    const headers = [...rows[0]];
-    let dataRows = rows.slice(1); // Skip header
+    const headers = rows[0];
     const normalizeHeader = (header) => header.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-    const parseIntegerStat = (value) => {
-      if (value === undefined || value === null) return null;
-      const trimmed = String(value).trim();
-      if (trimmed === '') return null;
-      const parsed = parseInt(trimmed, 10);
-      return Number.isNaN(parsed) ? null : parsed;
-    };
     const isPitcherPosition = (positionValue) => {
       const normalizedPosition = (positionValue || '').toUpperCase();
       if (!normalizedPosition) return false;
@@ -241,29 +233,6 @@
       const pitcherTokens = new Set(['P', 'SP', 'RP', 'RHP', 'LHP']);
       return positionTokens.some(token => pitcherTokens.has(token));
     };
-    const normalizedHeaders = headers.map(normalizeHeader);
-    if (!normalizedHeaders.includes('pa')) {
-      const abColumnIndex = normalizedHeaders.findIndex((header) => header === 'ab');
-      const bbColumnIndex = normalizedHeaders.findIndex((header) => header === 'bb');
-      const hbpColumnIndex = normalizedHeaders.findIndex((header) => header === 'hbp');
-      const sfColumnIndex = normalizedHeaders.findIndex((header) => header === 'sf');
-      const shColumnIndex = normalizedHeaders.findIndex((header) => header === 'sh');
-      const paInsertIndex = abColumnIndex !== -1 ? abColumnIndex + 1 : headers.length;
-
-      headers.splice(paInsertIndex, 0, 'PA');
-      dataRows = dataRows.map((row) => {
-        const ab = parseIntegerStat(row[abColumnIndex]);
-        const bb = parseIntegerStat(row[bbColumnIndex]);
-        const hbp = parseIntegerStat(row[hbpColumnIndex]);
-        const sf = parseIntegerStat(row[sfColumnIndex]);
-        const sh = parseIntegerStat(row[shColumnIndex]);
-        const hasAnyComponent = [ab, bb, hbp, sf, sh].some((value) => value !== null);
-        const pa = hasAnyComponent ? (ab || 0) + (bb || 0) + (hbp || 0) + (sf || 0) + (sh || 0) : '';
-        const nextRow = [...row];
-        nextRow.splice(paInsertIndex, 0, pa === '' ? '' : String(pa));
-        return nextRow;
-      });
-    }
     const decimalHeaderPatterns = [
       /^avg$/,
       /^obp$/,
@@ -302,6 +271,7 @@
     const bbColumnIndex = headers.findIndex((header) => normalizeHeader(header) === 'bb');
     const kColumnIndex = headers.findIndex((header) => normalizeHeader(header) === 'k');
 
+    let dataRows = rows.slice(1); // Skip header
     let currentSort = { index: null, direction: 'asc' };
     let currentFilter = 'all';
 
